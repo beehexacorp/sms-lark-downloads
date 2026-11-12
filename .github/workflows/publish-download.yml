@@ -1,0 +1,23 @@
+name: Publish public APK download
+on:
+  push:
+    branches: [main]
+    paths: ['sms-lark-bridge.apk', 'SHA256SUMS.txt', '.github/workflows/publish-download.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify APK integrity
+        run: sha256sum --check SHA256SUMS.txt
+      - name: Publish download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          printf '%s\n' 'SMS to Lark Android development APK. No GitHub login required for this public download.' 'Android compilation/lint, 44 core checks and seven Android 15 emulator tests passed.' 'Physical-device and live-service testing are still required. See README for installation and SMS permission guidance.' > release-notes.txt
+          gh release create android-test-2 sms-lark-bridge.apk SHA256SUMS.txt --target "$GITHUB_SHA" --title 'Android test build 2' --notes-file release-notes.txt --prerelease
